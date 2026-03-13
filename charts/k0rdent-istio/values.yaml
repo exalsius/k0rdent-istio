@@ -32,7 +32,7 @@ global:
 
 gateway:
   # -- Version of Istio Gateway to deploy
-  version: 1.25.5
+  version: 1.29.1
 
   # -- Gateway resource configuration to be deployed. Can be disabled by setting `gateway.resource` to `null` or an empty value
   resource:

@@ -4,12 +4,12 @@ dependencies:
   version: v0.14.0
 - name: base
   repository: https://istio-release.storage.googleapis.com/charts
-  version: 1.25.3
+  version: 1.29.1
 - name: istiod
   repository: https://istio-release.storage.googleapis.com/charts
-  version: 1.25.3
+  version: 1.29.1
 - name: kgst
   repository: oci://ghcr.io/k0rdent/catalog/charts
   version: 1.2.0
-digest: sha256:1bae066773b0a018c329fd951c16f69899c59245173c7ff0b5860ff2047ad5c2
-generated: "2025-11-12T12:14:25.640371+02:00"
+digest: sha256:0b011e1db2904f353e46bd83e53f5951609a5e8fe00d5426d9e323bf0aa6d196
+generated: "2026-03-13T16:01:28.039266389+01:00"
