@@ -127,6 +127,12 @@ istiod:
       proxyMetadata:
         # -- Enables DNS capture for Istio sidecar proxies
         ISTIO_META_DNS_CAPTURE: "true"
+        # Necessary for GAIE to work
+        ENABLE_GATEWAY_API_INFERENCE_EXTENSION: "true"
+  pilot:
+    env:
+      # Necessary for GAIE to work
+      ENABLE_GATEWAY_API_INFERENCE_EXTENSION: "true"
 
   env:
     # -- Disables Istiod CA server when external cert-manager CA is used
