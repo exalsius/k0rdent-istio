@@ -11,6 +11,6 @@ spec:
   helm:
     chartRef:
       kind: HelmChart
-      name: {{ .Chart.Name }}-{{ $version }}
-      namespace: {{ .Values.kcm.namespace }}
+      name: flux-system-k0rdent-istio
+      namespace: flux-system
 {{- end }}
