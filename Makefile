@@ -101,7 +101,11 @@ istio-operator-docker-build: ## Build istio-operator controller docker image
 	cd istio-operator && make docker-build
 	@istio_version=v$$($(YQ) .version $(TEMPLATES_DIR)/k0rdent-istio/Chart.yaml); \
 	$(CONTAINER_TOOL) tag istio-operator-controller istio-operator-controller:$$istio_version; \
-	$(KIND) load docker-image istio-operator-controller:$$istio_version --name $(KIND_CLUSTER_NAME)
+	if command -v kind >/dev/null && kind get clusters | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
+		kind load docker-image istio-operator-controller:$$istio_version --name $(KIND_CLUSTER_NAME); \
+	else \
+		echo "Skipping kind image load: cluster '$(KIND_CLUSTER_NAME)' not found"; \
+	fi
 
 .PHONY: dev-adopted-deploy
 dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment

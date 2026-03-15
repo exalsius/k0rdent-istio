@@ -247,7 +247,20 @@ $(GORELEASER): $(LOCALBIN)
 .PHONY: yq
 yq: $(YQ) ## Download yq locally if necessary.
 $(YQ): | $(LOCALBIN)
-	$(call go-install-tool,$(YQ),github.com/mikefarah/yq/v4,${YQ_VERSION})
+	@[ -f "$(YQ)-$(YQ_VERSION)" ] || { \
+	set -e; \
+	echo "Downloading github.com/mikefarah/yq/v4@$(YQ_VERSION)"; \
+	rm -f $(YQ) $(YQ)-$(YQ_VERSION) || true; \
+	GOBIN=$(LOCALBIN) go install github.com/mikefarah/yq/v4@$(YQ_VERSION); \
+	if [ -f $(YQ) ]; then \
+		mv $(YQ) $(YQ)-$(YQ_VERSION); \
+	elif [ -f $(LOCALBIN)/v4 ]; then \
+		mv $(LOCALBIN)/v4 $(YQ)-$(YQ_VERSION); \
+	else \
+		echo "go install did not produce yq or v4 in $(LOCALBIN)" && exit 1; \
+	fi; \
+	}; \
+	ln -sf $(YQ)-$(YQ_VERSION) $(YQ)
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary
