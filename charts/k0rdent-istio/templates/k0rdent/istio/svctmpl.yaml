@@ -9,8 +9,10 @@ metadata:
     helm.sh/resource-policy: keep
 spec:
   helm:
-    chartRef:
-      kind: HelmChart
-      name: flux-system-k0rdent-istio
-      namespace: flux-system
+    chartSpec:
+      chart: ./charts/k0rdent-istio
+      version: {{ $.Chart.Version | quote }}
+      sourceRef:
+        kind: GitRepository
+        name: k0rdent-istio
 {{- end }}

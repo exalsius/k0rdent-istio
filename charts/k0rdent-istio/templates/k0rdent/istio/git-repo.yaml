@@ -1,0 +1,12 @@
+{{- if .Values.isManagement }}
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: k0rdent-istio
+  namespace: {{ .Values.kcm.namespace }}
+spec:
+  interval: 5m
+  url: https://github.com/mcd01/istio
+  ref:
+    branch: v0.4.0-mod
+{{- end }}
