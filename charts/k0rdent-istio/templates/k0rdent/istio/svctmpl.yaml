@@ -9,11 +9,8 @@ metadata:
     helm.sh/resource-policy: keep
 spec:
   helm:
-    chartSpec:
-      chart: {{ .Chart.Name }}
-      version: {{ $.Chart.Version | quote }}
-      interval: 10m0s
-      sourceRef:
-        kind: HelmRepository
-        name: {{ index .Values "k0rdent-istio" "repo" "name" }}
+    chartRef:
+      kind: HelmChart
+      name: k0rdent-istio-0-4-0
+      namespace: kcm-system
 {{- end }}
