@@ -115,7 +115,10 @@ func (rs *RemoteSecretManager) TryCreate(ctx context.Context, clusterDeployment 
 		return fmt.Errorf("failed to get kubeconfig secret name: %v", err)
 	}
 
-	kubeconfig, err := k8s.GetKubeconfigFromSecret(ctx, regionKubeClient, kubeconfigSecretName)
+	namespaces := make([]string, 0, 1+len(k8s.KubeconfigSecretNamespaceFallback))
+	namespaces = append(namespaces, clusterDeployment.Namespace)
+	namespaces = append(namespaces, k8s.KubeconfigSecretNamespaceFallback...)
+	kubeconfig, err := k8s.GetKubeconfigFromSecretInNamespaces(ctx, regionKubeClient, kubeconfigSecretName, namespaces)
 	if err != nil {
 		return fmt.Errorf("failed to get kubeconfig from secret: %v", err)
 	}

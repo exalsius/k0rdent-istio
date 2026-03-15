@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	DefaultKCMSystemNamespace = "kcm-system"
+	DefaultKCMSystemNamespace   = "kcm-system"
+	DefaultIstioSystemNamespace = "istio-system"
 
 	ClusterSecretSuffix = "kubeconfig"
 )
