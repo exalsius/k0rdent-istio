@@ -12,5 +12,5 @@ spec:
     chartRef:
       kind: HelmChart
       name: {{ .Chart.Name }}-{{ $version }}
-      namespace: kcm-system
+      namespace: {{ .Values.kcm.namespace }}
 {{- end }}
