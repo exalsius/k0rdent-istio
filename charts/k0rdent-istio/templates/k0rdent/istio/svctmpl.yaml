@@ -11,6 +11,6 @@ spec:
   helm:
     chartRef:
       kind: HelmChart
-      name: k0rdent-istio-0-4-0
+      name: {{ .Chart.Name }}-{{ $version }}
       namespace: kcm-system
 {{- end }}
