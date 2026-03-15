@@ -12,6 +12,7 @@ spec:
     chartSpec:
       chart: ./charts/k0rdent-istio
       version: {{ $.Chart.Version | quote }}
+      interval: 10m0s
       sourceRef:
         kind: GitRepository
         name: k0rdent-istio
