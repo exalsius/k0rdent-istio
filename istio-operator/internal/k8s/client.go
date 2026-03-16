@@ -50,40 +50,36 @@ func NewKubeClientFromKubeconfig(kubeconfig []byte) (*KubeClient, error) {
 	return newKubeClient(config)
 }
 
-// KubeconfigSecretNamespaceFallback is the ordered list of namespaces to try when
-// resolving a kubeconfig secret: ClusterDeployment namespace, then kcm-system, then istio-system.
-var KubeconfigSecretNamespaceFallback = []string{DefaultKCMSystemNamespace, DefaultIstioSystemNamespace}
-
 func GetKubeconfigFromClusterDeployment(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) ([]byte, error) {
 	kubeconfigSecretName, err := GetKubeconfigSecretName(ctx, client, cd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get kubeconfig secret name: %v", err)
 	}
 
-	namespaces := make([]string, 0, 1+len(KubeconfigSecretNamespaceFallback))
-	namespaces = append(namespaces, cd.Namespace)
-	namespaces = append(namespaces, KubeconfigSecretNamespaceFallback...)
-	return GetKubeconfigFromSecretInNamespaces(ctx, client, kubeconfigSecretName, namespaces)
+	return GetKubeconfigFromSecretInNamespace(ctx, client, kubeconfigSecretName, cd.Namespace)
 }
 
-// GetKubeconfigFromSecretInNamespaces returns kubeconfig data from the named secret,
-// trying each namespace in order. Returns the first successful result.
-func GetKubeconfigFromSecretInNamespaces(ctx context.Context, client client.Client, secretName string, namespaces []string) ([]byte, error) {
-	for _, ns := range namespaces {
-		secret, err := GetSecret(ctx, client, secretName, ns)
-		if err != nil {
-			continue
-		}
-		kubeconfig := GetSecretValue(secret)
-		if kubeconfig != nil {
-			return kubeconfig, nil
-		}
+// GetKubeconfigFromSecretInNamespace returns kubeconfig data from the named secret
+// in the given namespace. This is used for ClusterDeployment-related kubeconfigs,
+// where we only look in the ClusterDeployment's namespace.
+func GetKubeconfigFromSecretInNamespace(ctx context.Context, client client.Client, secretName, namespace string) ([]byte, error) {
+	secret, err := GetSecret(ctx, client, secretName, namespace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get secret: %v", err)
 	}
-	return nil, fmt.Errorf("failed to get secret %q in any of %v", secretName, namespaces)
+
+	kubeconfig := GetSecretValue(secret)
+	if kubeconfig == nil {
+		return nil, fmt.Errorf("kubeconfig is empty")
+	}
+
+	return kubeconfig, nil
 }
 
 func GetKubeconfigFromSecret(ctx context.Context, client client.Client, secretName string) ([]byte, error) {
-	return GetKubeconfigFromSecretInNamespaces(ctx, client, secretName, KubeconfigSecretNamespaceFallback)
+	// Backwards-compatible helper used for Region flows, which historically
+	// relied on management-level defaults.
+	return GetKubeconfigFromSecretInNamespace(ctx, client, secretName, DefaultKCMSystemNamespace)
 }
 
 func NewKubeClientFromSecret(ctx context.Context, client client.Client, secretName, namespace string) (*KubeClient, error) {
