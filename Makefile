@@ -97,8 +97,8 @@ dev-istio-deploy: dev istio-operator-docker-build ## Deploy k0rdent-istio helm c
 	$(HELM_UPGRADE) --create-namespace -n istio-system k0rdent-istio ./charts/k0rdent-istio -f dev/k0rdent-istio-values.yaml
 
 .PHONY: istio-operator-docker-build
-istio-operator-docker-build: ## Build istio-operator controller docker image
-	cd istio-operator && make docker-build
+istio-operator-docker-build: yq ## Build istio-operator controller docker image
+	cd istio-operator && make docker-build YQ=$(YQ)
 	@istio_version=v$$($(YQ) .version $(TEMPLATES_DIR)/k0rdent-istio/Chart.yaml); \
 	$(CONTAINER_TOOL) tag istio-operator-controller istio-operator-controller:$$istio_version; \
 	if command -v kind >/dev/null && kind get clusters | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \

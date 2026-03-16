@@ -118,7 +118,13 @@ func (rs *RemoteSecretManager) TryCreate(ctx context.Context, clusterDeployment 
 	namespaces := make([]string, 0, 1+len(k8s.KubeconfigSecretNamespaceFallback))
 	namespaces = append(namespaces, clusterDeployment.Namespace)
 	namespaces = append(namespaces, k8s.KubeconfigSecretNamespaceFallback...)
-	kubeconfig, err := k8s.GetKubeconfigFromSecretInNamespaces(ctx, regionKubeClient, kubeconfigSecretName, namespaces)
+
+	// Try management cluster first (secret often lives next to the ClusterDeployment).
+	kubeconfig, err := k8s.GetKubeconfigFromSecretInNamespaces(ctx, rs.client, kubeconfigSecretName, namespaces)
+	if err != nil && regionKubeClient != rs.client {
+		// Fall back to region cluster when the cluster is in a KCM region.
+		kubeconfig, err = k8s.GetKubeconfigFromSecretInNamespaces(ctx, regionKubeClient, kubeconfigSecretName, namespaces)
+	}
 	if err != nil {
 		return fmt.Errorf("failed to get kubeconfig from secret: %v", err)
 	}

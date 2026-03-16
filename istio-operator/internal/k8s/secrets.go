@@ -6,7 +6,6 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/istio/istio-operator/internal/controller/utils"
-	crds "github.com/k0rdent/istio/istio-operator/internal/crd"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -43,13 +42,8 @@ func GetKubeconfigSecretName(ctx context.Context, k8sClient client.Client, cd *k
 }
 
 func GetAdoptedClusterSecretName(ctx context.Context, k8sClient client.Client, cd *kcmv1beta1.ClusterDeployment) (string, error) {
-	cred := new(crds.Credential)
-	namespacedName := types.NamespacedName{
-		Name:      cd.Spec.Credential,
-		Namespace: cd.Namespace,
-	}
-
-	if err := k8sClient.Get(ctx, namespacedName, cred); err != nil {
+	cred, err := GetCredentialForClusterDeployment(ctx, k8sClient, cd)
+	if err != nil {
 		return "", fmt.Errorf("failed to get credential: %w", err)
 	}
 
