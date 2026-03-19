@@ -10,10 +10,11 @@ metadata:
 spec:
   helm:
     chartSpec:
-      chart: ./charts/k0rdent-istio
+      chart:{{ .Chart.Name }}
       version: {{ $.Chart.Version | quote }}
       interval: 10m0s
+      reconcileStrategy: ChartVersion
       sourceRef:
-        kind: GitRepository
-        name: k0rdent-istio
+        kind: HelmRepository
+        name: {{ index .Values "k0rdent-istio" "repo" "name" }}
 {{- end }}

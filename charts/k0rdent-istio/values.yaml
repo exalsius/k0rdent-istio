@@ -193,7 +193,7 @@ k0rdent-istio:
     name: istio-registry
     spec:
       type: oci
-      url: oci://ghcr.io/k0rdent/istio/charts
+      url: oci://ghcr.io/exalsius/k0rdent-istio/charts
 
 # -- Config of `ServiceTemplate` to use `cert-manager` in `MultiClusterService`.
 cert-manager-service-template:
