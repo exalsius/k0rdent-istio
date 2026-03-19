@@ -64,7 +64,7 @@ spec:
           {{- else }}{{ .Values.operator.image.registry }}
           {{- end }}/{{ .Values.operator.image.repository }}:
           {{- with .Values.operator.image.tag }}{{ . }}
-          {{- else }}v{{ .Chart.Version }}{{ end }}"
+          {{- else }}{{ .Chart.Version }}{{ end }}"
         imagePullPolicy: {{ .Values.operator.image.pullPolicy }}
         livenessProbe:
           failureThreshold: 6
