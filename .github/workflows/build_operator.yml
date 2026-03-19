@@ -61,7 +61,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           version: "~> v2"
-          args: release --clean --verbose
+          args: release --snapshot --clean --verbose
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE_REPO: ghcr.io/${{ steps.compute-repo.outputs.repo_lower }}/istio-operator-controller
