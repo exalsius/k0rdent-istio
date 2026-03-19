@@ -68,3 +68,18 @@ jobs:
           GITHUB_OWNER: ${{ github.repository_owner }}
           GITHUB_REPO_NAME: ${{ github.event.repository.name }}
           VERSION: ${{ steps.branch-tag.outputs.tag }}
+      - name: Push images to GHCR (ensure)
+        shell: bash
+        env:
+          IMAGE_REPO: ghcr.io/${{ steps.compute-repo.outputs.repo_lower }}/istio-operator-controller
+          TAG: ${{ steps.branch-tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          docker push "${IMAGE_REPO}:${TAG}-amd64"
+          docker push "${IMAGE_REPO}:${TAG}-arm64"
+
+          docker manifest create "${IMAGE_REPO}:${TAG}" \
+            --amend "${IMAGE_REPO}:${TAG}-amd64" \
+            --amend "${IMAGE_REPO}:${TAG}-arm64"
+          docker manifest push "${IMAGE_REPO}:${TAG}"

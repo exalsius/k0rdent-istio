@@ -1,7 +1,7 @@
 apiVersion: v2
 name: k0rdent-istio
 description: Istio Helm chart that deploys Istio with multicluster multinetwork setup
-version: "0.4.0"
+version: "v0.4.0-mod"
 appVersion: "0.4.0"
 dependencies:
   - name: cert-manager-istio-csr

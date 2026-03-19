@@ -10,7 +10,7 @@ metadata:
 spec:
   helm:
     chartSpec:
-      chart:{{ .Chart.Name }}
+      chart: {{ .Chart.Name }}
       version: {{ $.Chart.Version | quote }}
       interval: 10m0s
       reconcileStrategy: ChartVersion

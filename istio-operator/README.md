@@ -4,6 +4,7 @@
 
 The Istio Operator automatically generates Kubernetes credentials secrets and Istio certificates on each cluster labeled with `k0rdent.mirantis.com/istio-role`. This enables Istio endpoints discovery for all clusters in the Istio mesh.
 
+
 ## Getting Started
 
 ### Prerequisites
