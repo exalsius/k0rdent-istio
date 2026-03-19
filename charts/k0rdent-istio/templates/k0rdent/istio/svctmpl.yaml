@@ -1,5 +1,5 @@
 {{- if .Values.isManagement }}
-{{- $version := .Chart.Version | replace "." "-" }}
+{{- $version := .Chart.Version | trimPrefix "v" | splitList "-" | first | replace "." "-" }}
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: ServiceTemplate
 metadata:

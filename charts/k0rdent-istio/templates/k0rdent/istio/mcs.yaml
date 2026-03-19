@@ -4,7 +4,7 @@
   {{- if and $global.registry (ne $global.registry "docker.io") }}
     {{- $customRegistry = $global.registry }}
   {{- end }}
-  {{- $version := .Chart.Version | replace "." "-" }}
+  {{- $version := .Chart.Version | trimPrefix "v" | splitList "-" | first | replace "." "-" }}
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService
 metadata:
