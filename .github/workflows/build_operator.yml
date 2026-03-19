@@ -1,8 +1,8 @@
-name: "Release Operator"
+name: "Build and push operator"
 on:
   push:
-    tags:
-      - "*"
+    branches:
+      - v0.4.0-mod
     paths:
       - "istio-operator/**"
 
@@ -13,8 +13,6 @@ jobs:
       cancel-in-progress: true
     name: Build and Unit Test
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.vars.outputs.version }}
     permissions:
       packages: write
       contents: write
@@ -40,11 +38,19 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Get outputs
-        id: vars
+      - name: Compute branch image tag
+        id: branch-tag
+        shell: bash
         run: |
-          GIT_VERSION=$(git describe --tags --always)
-          echo "version=${GIT_VERSION}" >> $GITHUB_OUTPUT
+          # github.ref_name is the branch or tag name that triggered the workflow
+          ref_name="${GITHUB_REF_NAME}"
+          # Docker tag rules are stricter than git refs; normalize to a safe tag.
+          tag="$(echo "${ref_name}" | tr '[:upper:]' '[:lower:]' | sed -E 's#[^a-z0-9._-]+#-#g; s#^-+##; s#-+$##')"
+          # Fallback just in case normalization produces empty string
+          if [[ -z "${tag}" ]]; then
+            tag="unknown-branch"
+          fi
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
       - name: Compute Lowercase Repo
         id: compute-repo
         run: |
@@ -60,4 +66,4 @@ jobs:
           IMAGE_REPO: ghcr.io/${{ steps.compute-repo.outputs.repo_lower }}/istio-operator-controller
           GITHUB_OWNER: ${{ github.repository_owner }}
           GITHUB_REPO_NAME: ${{ github.event.repository.name }}
-          VERSION: ${{ steps.vars.outputs.version }}
+          VERSION: ${{ steps.branch-tag.outputs.tag }}

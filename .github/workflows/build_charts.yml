@@ -3,7 +3,7 @@ name: "Build and push helm charts"
 on:
   push:
     branches:
-      - main
+      - v0.4.0-mod
     paths:
       - "charts/**"
 
@@ -35,7 +35,7 @@ jobs:
               | map("helm repo add " + .name + " " + .repository)[]' "$dir/Chart.yaml" | sh
             helm dependency update "$dir"
 
-            version=$(yq .version "$dir/Chart.yaml")-${{ github.sha }}
+            version=$(yq .version "$dir/Chart.yaml")
             helm package "$dir" --version "$version" --app-version "$version"
             chart_name=$(yq .name "$dir/Chart.yaml")
             mv "$chart_name-$version.tgz" build/

@@ -152,10 +152,9 @@ operator:
 
   # -- Image of the kof operator.
   image:
-    registry: docker.io
-    repository: mcd01/istio-operator
+    registry: ghcr.io/exalsius
+    repository: k0rdent-istio/istio-operator-controller
     pullPolicy: Always
-    tag: v0.4.0
 
   resources:
     # -- Minimum resources required for operator.
