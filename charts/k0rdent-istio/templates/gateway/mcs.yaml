@@ -41,38 +41,34 @@ spec:
     services:
       - name: istio-gateway
         namespace: {{ $.Release.Namespace }}
-        template: {{ $.Chart.Name }}-gateway-{{ $chartVersion }}
-        values: |
-          name: istio-gateway-{{ `{{ printf "%s-%s" .Cluster.metadata.namespace .Cluster.metadata.name | adler32sum }}` }}
-          networkGateway: {{ $cfg.networkGateway }}
-          labels:
-            istio: eastwestgateway
-
-      {{- if $.Values.gateway.resource }}
-      - name: gateway-template
-        namespace: {{ $.Release.Namespace }}
         template: {{ $.Chart.Name }}-propagation-{{ $chartVersion }}
-        dependsOn:
-          - name: istio-gateway
-            namespace: {{ $.Release.Namespace }}
         values: |
+          {{`{{- $isregionalCluster := and .Cluster.metadata.labels (eq (index .Cluster.metadata.labels "k0rdent.mirantis.com/kcm-region-cluster") "true") }}`}}
           propagation:
             enabled: true
             data: |
-{{- $gatewayResource := $.Values.gateway.resource }}
-{{- $processedResource := deepCopy $gatewayResource }}
-{{- if $processedResource.spec.servers }}
-{{- range $serverIdx, $server := $processedResource.spec.servers }}
-{{- if $server.hosts }}
-{{- $processedHosts := list }}
-{{- range $host := $server.hosts }}
-{{- $processedHosts = append $processedHosts ($host | replace "{clusterName}" "{{ .Cluster.metadata.name }}") }}
-{{- end }}
-{{- $_ := set $server "hosts" $processedHosts }}
-{{- end }}
-{{- end }}
-{{- end }}
-{{ toYaml $processedResource | nindent 14 }}
-      {{- end }}
+              apiVersion: gateway.networking.k8s.io/v1
+              kind: Gateway
+              metadata:
+                name: istio-eastwestgateway
+                namespace: istio-system
+                annotations:
+                  {{`{{ if $isregionalCluster }}`}}
+                  networking.istio.io/service-type: LoadBalancer
+                  {{`{{ else }}`}}
+                  networking.istio.io/service-type: NodePort
+                  {{`{{ end }}`}}
+                labels:
+                  topology.istio.io/network: {{ $cfg.networkGateway }}
+              spec:
+                gatewayClassName: istio-east-west
+                listeners:
+                - name: mesh
+                  port: 15008
+                  protocol: HBONE
+                  tls:
+                    mode: Terminate
+                    options:
+                      gateway.istio.io/tls-terminate-mode: ISTIO_MUTUAL
 {{- end }}
 {{- end }}

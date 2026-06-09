@@ -1,0 +1,23 @@
+{{- if eq .Values.istiod.profile "ambient" }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cert-manager-istio-csr-ambient-pods
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cert-manager-istio-csr-ambient-pods
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager-istio-csr-ambient-pods
+subjects:
+- kind: ServiceAccount
+  name: cert-manager-istio-csr
+  namespace: istio-system
+{{- end }}

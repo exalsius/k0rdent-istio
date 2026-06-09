@@ -4,12 +4,18 @@ dependencies:
   version: v0.14.0
 - name: base
   repository: https://istio-release.storage.googleapis.com/charts
-  version: 1.25.3
+  version: 1.29.1
 - name: istiod
   repository: https://istio-release.storage.googleapis.com/charts
-  version: 1.25.3
+  version: 1.29.1
+- name: cni
+  repository: https://istio-release.storage.googleapis.com/charts
+  version: 1.29.1
+- name: ztunnel
+  repository: https://istio-release.storage.googleapis.com/charts
+  version: 1.29.1
 - name: kgst
   repository: oci://ghcr.io/k0rdent/catalog/charts
   version: 2.0.1
-digest: sha256:d7eaeef7c326fa0e52c7e78492ea57d26bd01b7bb22f8510d9cf01040fe99dbd
-generated: "2026-05-29T14:22:34.844215+03:00"
+digest: sha256:3ee07e99006dae97b56b45ab593050d88789a1f412f0edeb30e10ec631bfd633
+generated: "2026-06-09T12:27:45.587270381+02:00"

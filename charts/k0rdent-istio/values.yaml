@@ -46,32 +46,6 @@ global:
     # -- Path where Envoy access logs will be written
     accessLogFile: /dev/stdout
 
-gateway:
-  # -- Version of Istio Gateway to deploy
-  version: 1.25.5
-
-  # -- Gateway resource configuration to be deployed. Can be disabled by setting `gateway.resource` to `null` or an empty value
-  resource:
-    apiVersion: networking.istio.io/v1
-    kind: Gateway
-    metadata:
-      name: network-gateway
-      namespace: istio-system
-    spec:
-      selector:
-        istio: eastwestgateway
-      servers:
-        - port:
-            number: 15443
-            name: tls
-            protocol: TLS
-          tls:
-            mode: AUTO_PASSTHROUGH
-          # If {clusterName} placeholder is used in hosts field,
-          # it will be replaced with actual cluster name
-          hosts:
-            - "*.local"
-
 telemetry:
   # -- Enable Istio telemetry with OpenTelemetry tracing
   enabled: true
@@ -110,6 +84,7 @@ cert-manager-istio-csr:
     server:
       # -- Cluster ID used by the cert-manager Istio CSR server
       clusterID: management
+      caTrustedNodeAccounts: istio-system/ztunnel
 
 istiobase:
   # -- Enable installation of istio-base. Set to false if it is already installed in the cluster.
@@ -118,6 +93,9 @@ istiobase:
 istiod:
   # -- Enable installation of istiod. Set to false if it is already installed in the cluster.
   enabled: true
+  # -- Use Istio ambient profile for control plane defaults
+  profile: ambient
+
   # -- Mount and reference cert-manager issued TLS and CA certificates
   extraContainerArgs:
     - --tlsCertFile=/etc/cert-manager/tls/tls.crt
@@ -141,6 +119,7 @@ istiod:
         defaultMode: 420
         name: istio-ca-root-cert
         optional: true
+
   meshConfig:
     # -- Enables tracing collection inside the Istio mesh
     enableTracing: true
@@ -152,9 +131,26 @@ istiod:
         # -- Enables DNS capture for Istio sidecar proxies
         ISTIO_META_DNS_CAPTURE: "true"
 
+  pilot:
+    env:
+      # Necessary for GAIE to work
+      ENABLE_GATEWAY_API_INFERENCE_EXTENSION: "true"
+      PILOT_ENABLE_IP_AUTOALLOCATE: "true"
+      ENABLE_WILDCARD_HOST_SERVICE_ENTRIES_FOR_TLS: "true"
+
   env:
     # -- Disables Istiod CA server when external cert-manager CA is used
     ENABLE_CA_SERVER: false
+    # -- Enables ambient multicluster multi-network processing in istiod
+    AMBIENT_ENABLE_MULTI_NETWORK: "true"
+    AMBIENT_ENABLE_BAGGAGE: "true"
+
+cni:
+  # -- Use Istio ambient profile for CNI daemonset defaults
+  profile: ambient
+
+ztunnel:
+  profile: ambient
 
 operator:
   # -- Enables the `istio-operator`.

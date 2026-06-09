@@ -13,14 +13,6 @@ TODO: Add back the main template to the list after the new release
 */ -}}
 {{- $templates := list
   (dict
-    "name" (printf "%s-gateway-%s" .Chart.Name $chartVersion)
-    "prefix" (printf "%s-gateway-" .Chart.Name)
-    "specType" "helm"
-    "chart" "gateway"
-    "version" .Values.gateway.version
-    "repo" .Values.istio.repo.name
-  )
-  (dict
     "name" (printf "%s-propagation-%s" .Chart.Name $chartVersion)
     "prefix" (printf "%s-propagation" .Chart.Name)
     "specType" "helm"
