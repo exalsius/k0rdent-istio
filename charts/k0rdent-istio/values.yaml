@@ -166,9 +166,9 @@ operator:
 
   # -- Image of the istio operator.
   image:
-    registry: ghcr.io/k0rdent
-    repository: istio/istio-operator-controller
-    pullPolicy: IfNotPresent
+    registry: ghcr.io/exalsius
+    repository: k0rdent-istio/istio-operator-controller
+    pullPolicy: Always
 
   resources:
     # -- Minimum resources required for operator.
@@ -206,7 +206,7 @@ k0rdent-istio:
     name: istio-registry
     spec:
       type: oci
-      url: oci://ghcr.io/k0rdent/istio/charts
+      url: oci://ghcr.io/exalsius/k0rdent-istio/charts
       insecure: false
 
 # -- Config of `ServiceTemplate` to use `cert-manager` in `MultiClusterService`.
