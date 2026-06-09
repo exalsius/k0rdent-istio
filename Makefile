@@ -26,7 +26,7 @@ REGISTRY_PLAIN_HTTP ?= true
 
 TEMPLATE_FOLDERS = $(patsubst $(TEMPLATES_DIR)/%,%,$(wildcard $(TEMPLATES_DIR)/*))
 
-KIND_CLUSTER_NAME ?= kcm-dev
+KIND_CLUSTER_NAME ?= exalsius
 
 define set_local_registry
 	$(eval $@_VALUES = $(1))
@@ -101,11 +101,11 @@ dev-istio-deploy: dev istio-operator-docker-build ## Deploy k0rdent-istio helm c
 	@if [ -n "$(MGMT_INCLUDE_IN_MESH)" ]; then \
 		$(YQ) eval -i '.managementCluster.includeInMesh = true' dev/k0rdent-istio-values.yaml; \
 	fi
-	$(HELM_UPGRADE) --create-namespace -n istio-system k0rdent-istio ./charts/k0rdent-istio -f dev/k0rdent-istio-values.yaml
+	$(HELM_UPGRADE) --create-namespace -n istio-system k0rdent-istio ./charts/k0rdent-istio -f dev/k0rdent-istio-values.yaml --force --kube-context kind-exalsius
 
 .PHONY: istio-operator-docker-build
-istio-operator-docker-build: ## Build istio-operator controller docker image
-	cd istio-operator && make docker-build
+istio-operator-docker-build: yq## Build istio-operator controller docker image
+	cd istio-operator && make docker-build YQ=$(YQ)
 	@istio_version=v$$($(YQ) .version $(TEMPLATES_DIR)/k0rdent-istio/Chart.yaml); \
 	$(CONTAINER_TOOL) tag istio-operator-controller istio-operator-controller:$$istio_version; \
 	$(KIND) load docker-image istio-operator-controller:$$istio_version --name $(KIND_CLUSTER_NAME)
@@ -142,12 +142,16 @@ support-bundle: support-bundle-cli ## Create and analyze support bundle given op
 	scripts/create_support_bundle.sh
 
 ## Tool Binaries
-HELM ?= $(LOCALBIN)/helm-$(HELM_VERSION)
+SYSTEM_HELM ?= $(shell command -v helm 2>/dev/null)
+HELM ?= $(if $(SYSTEM_HELM),$(SYSTEM_HELM),$(LOCALBIN)/helm-$(HELM_VERSION))
 HELM_UPGRADE = $(HELM) upgrade -i --reset-values --wait
 export HELM HELM_UPGRADE
-KIND ?= $(LOCALBIN)/kind-$(KIND_VERSION)
-YQ ?= $(LOCALBIN)/yq-$(YQ_VERSION)
-ENVSUBST ?= $(LOCALBIN)/envsubst-$(ENVSUBST_VERSION)
+SYSTEM_KIND ?= $(shell command -v kind 2>/dev/null)
+KIND ?= $(if $(SYSTEM_KIND),$(SYSTEM_KIND),$(LOCALBIN)/kind-$(KIND_VERSION))
+SYSTEM_YQ ?= $(shell command -v yq 2>/dev/null)
+YQ ?= $(if $(SYSTEM_YQ),$(SYSTEM_YQ),$(LOCALBIN)/yq-$(YQ_VERSION))
+SYSTEM_ENVSUBST ?= $(shell command -v envsubst 2>/dev/null)
+ENVSUBST ?= $(if $(SYSTEM_ENVSUBST),$(SYSTEM_ENVSUBST),$(LOCALBIN)/envsubst-$(ENVSUBST_VERSION))
 KUBECTL ?= kubectl
 SUPPORT_BUNDLE_CLI ?= $(LOCALBIN)/support-bundle-$(SUPPORT_BUNDLE_CLI_VERSION)
 
