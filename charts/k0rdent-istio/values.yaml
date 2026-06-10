@@ -133,11 +133,16 @@ istiod:
 
   pilot:
     env:
-      # Necessary for GAIE to work
-      ENABLE_GATEWAY_API_INFERENCE_EXTENSION: "true"
       PILOT_ENABLE_IP_AUTOALLOCATE: "true"
       ENABLE_WILDCARD_HOST_SERVICE_ENTRIES_FOR_TLS: "true"
+      # Necessary for Waypoint routing to work with Ingress Gateway
       ENABLE_INGRESS_WAYPOINT_ROUTING: "true"
+      # Necessary for GAIE to work
+      ENABLE_GATEWAY_API_INFERENCE_EXTENSION: "true"
+      # Watch and reconcile experimental (v1alpha2) Gateway API resources.
+      # The workspace SSH/TCP port pool uses TCPRoute, which istiod ignores
+      # unless this gate is on (HTTPRoute is stable and works without it).
+      PILOT_ENABLE_ALPHA_GATEWAY_API: "true"
 
   env:
     # -- Disables Istiod CA server when external cert-manager CA is used
