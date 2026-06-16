@@ -149,6 +149,8 @@ istiod:
     ENABLE_CA_SERVER: false
     # -- Enables ambient multicluster multi-network processing in istiod
     AMBIENT_ENABLE_MULTI_NETWORK: "true"
+    AMBIENT_ENABLE_MULTI_NETWORK_INGRESS: "true"
+    AMBIENT_ENABLE_MULTI_NETWORK_WAYPOINT: "true"
     AMBIENT_ENABLE_BAGGAGE: "true"
 
 cni:
