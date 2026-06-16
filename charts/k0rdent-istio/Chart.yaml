@@ -10,17 +10,17 @@ dependencies:
     condition: certManagerIstioCsr.enabled
   - alias: istiobase
     name: base
-    version: "1.29.1"
+    version: "1.29.4"
     repository: "https://istio-release.storage.googleapis.com/charts"
     condition: istiobase.enabled
   - name: istiod
-    version: "1.29.1"
+    version: "1.29.4"
     repository: "https://istio-release.storage.googleapis.com/charts"
   - name: cni
-    version: "1.29.1"
+    version: "1.29.4"
     repository: "https://istio-release.storage.googleapis.com/charts"
   - name: ztunnel
-    version: "1.29.1"
+    version: "1.29.4"
     repository: "https://istio-release.storage.googleapis.com/charts"
     condition: istiod.enabled
   - name: kgst
