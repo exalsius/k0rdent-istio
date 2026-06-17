@@ -21,9 +21,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
+const testIstioSystemNamespace = "istio-system"
+
 func TestTryCreateUsesClusterDeploymentNamespaceSecret(t *testing.T) {
 	record.DefaultRecorder = events.NewFakeRecorder(16)
-	istio.IstioSystemNamespace = "istio-system"
+	istio.IstioSystemNamespace = testIstioSystemNamespace
 
 	cd := readyClusterDeployment("tenant-a", "member-a", "member-a")
 	credential := &kcmv1beta1.Credential{
@@ -52,7 +54,7 @@ func TestTryCreateUsesClusterDeploymentNamespaceSecret(t *testing.T) {
 	created := &corev1.Secret{}
 	err = c.Get(context.Background(), client.ObjectKey{
 		Name:      GetRemoteSecretName(cd.Name, cd.Namespace),
-		Namespace: istio.IstioSystemNamespace,
+		Namespace: testIstioSystemNamespace,
 	}, created)
 	if err != nil {
 		t.Fatalf("failed to get created remote secret: %v", err)
@@ -65,7 +67,7 @@ func TestTryCreateUsesClusterDeploymentNamespaceSecret(t *testing.T) {
 
 func TestTryCreateSetsMultiClusterLabelTrueForRegionCluster(t *testing.T) {
 	record.DefaultRecorder = events.NewFakeRecorder(16)
-	istio.IstioSystemNamespace = "istio-system"
+	istio.IstioSystemNamespace = testIstioSystemNamespace
 
 	cd := readyClusterDeployment("tenant-a", "member-a", "member-a")
 	cd.Labels = map[string]string{labels.KCMRegionClusterLabel: "true"}
@@ -88,7 +90,7 @@ func TestTryCreateSetsMultiClusterLabelTrueForRegionCluster(t *testing.T) {
 	created := &corev1.Secret{}
 	err := c.Get(context.Background(), client.ObjectKey{
 		Name:      GetRemoteSecretName(cd.Name, cd.Namespace),
-		Namespace: istio.IstioSystemNamespace,
+		Namespace: testIstioSystemNamespace,
 	}, created)
 	if err != nil {
 		t.Fatalf("failed to get created remote secret: %v", err)
@@ -101,7 +103,7 @@ func TestTryCreateSetsMultiClusterLabelTrueForRegionCluster(t *testing.T) {
 
 func TestTryCreateFailsWhenSecretMissingInClusterDeploymentNamespace(t *testing.T) {
 	record.DefaultRecorder = events.NewFakeRecorder(16)
-	istio.IstioSystemNamespace = "istio-system"
+	istio.IstioSystemNamespace = testIstioSystemNamespace
 
 	cd := readyClusterDeployment("tenant-b", "member-b", "member-b")
 	credential := &kcmv1beta1.Credential{
