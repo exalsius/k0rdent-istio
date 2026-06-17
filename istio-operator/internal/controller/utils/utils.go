@@ -126,7 +126,16 @@ func IsInMesh(cd *kcmv1beta1.ClusterDeployment) bool {
 // MustPropagationServiceValuesYAML builds Helm values for propagation.yaml.
 // Uses a block scalar for propagation.data.
 func MustPropagationServiceValuesYAML(templateResourceIdentifier string) string {
-	return fmt.Sprintf("propagation:\n  enabled: true\n  data: |\n{{ copy %q | nindent 14 }}\n", templateResourceIdentifier)
+	return fmt.Sprintf(`propagation:
+  enabled: true
+  data: |
+{{- $secret := fromYaml (copy %q) }}
+{{- if not $secret.metadata.labels }}
+{{- $_ := set $secret.metadata "labels" (dict) }}
+{{- end }}
+{{- $_ := set $secret.metadata.labels "istio/multiCluster" "true" }}
+{{ $secret | toYaml | nindent 14 }}
+`, templateResourceIdentifier)
 }
 
 // MustScopedCAPropagationServiceValuesYAML builds Helm values for propagation.yaml.
@@ -140,7 +149,7 @@ propagation:
 {{ if $eligible }}
 {{ copy %q | nindent 14 }}
 {{ end }}
-`, templateResourceName, "k0rdent.mirantis.com/kcm-region-cluster", templateResourceIdentifier)
+`, templateResourceName, labels.KCMRegionClusterLabel, templateResourceIdentifier)
 }
 
 // IsClusterDeploymentReady checks if a ClusterDeployment is considered ready.

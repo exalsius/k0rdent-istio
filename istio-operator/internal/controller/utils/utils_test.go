@@ -52,6 +52,18 @@ func TestMustScopedCAPropagationServiceValuesYAML_UsesBlockConditionals(t *testi
 	}
 }
 
+func TestMustPropagationServiceValuesYAML_OverridesMultiClusterLabel(t *testing.T) {
+	values := MustPropagationServiceValuesYAML("RemoteSecretData")
+
+	assertContainsAll(t, values,
+		`{{- $secret := fromYaml (copy "RemoteSecretData") }}`,
+		`{{- if not $secret.metadata.labels }}`,
+		`{{- $_ := set $secret.metadata "labels" (dict) }}`,
+		`{{- $_ := set $secret.metadata.labels "istio/multiCluster" "true" }}`,
+		`{{ $secret | toYaml | nindent 14 }}`,
+	)
+}
+
 func assertContainsAll(t *testing.T, values string, checks ...string) {
 	t.Helper()
 

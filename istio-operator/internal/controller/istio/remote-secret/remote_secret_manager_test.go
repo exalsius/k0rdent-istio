@@ -10,6 +10,8 @@ import (
 	"github.com/k0rdent/istio/istio-operator/internal/controller/istio"
 	"github.com/k0rdent/istio/istio-operator/internal/controller/record"
 	"github.com/k0rdent/istio/istio-operator/internal/k8s"
+	"github.com/k0rdent/istio/istio-operator/internal/labels"
+	mcluster "istio.io/istio/pkg/kube/multicluster"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -54,6 +56,46 @@ func TestTryCreateUsesClusterDeploymentNamespaceSecret(t *testing.T) {
 	}, created)
 	if err != nil {
 		t.Fatalf("failed to get created remote secret: %v", err)
+	}
+
+	if got := created.Labels[mcluster.MultiClusterSecretLabel]; got != "false" {
+		t.Fatalf("expected multicluster label to be false, got %q", got)
+	}
+}
+
+func TestTryCreateSetsMultiClusterLabelTrueForRegionCluster(t *testing.T) {
+	record.DefaultRecorder = events.NewFakeRecorder(16)
+	istio.IstioSystemNamespace = "istio-system"
+
+	cd := readyClusterDeployment("tenant-a", "member-a", "member-a")
+	cd.Labels = map[string]string{labels.KCMRegionClusterLabel: "true"}
+	credential := &kcmv1beta1.Credential{
+		ObjectMeta: metav1.ObjectMeta{Name: "member-a", Namespace: "tenant-a"},
+		Spec:       kcmv1beta1.CredentialSpec{},
+	}
+	tenantSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Name: "member-a-kubeconfig", Namespace: "tenant-a"},
+		Data:       map[string][]byte{"value": []byte("tenant-kubeconfig")},
+	}
+
+	c := newFakeClient(t, credential, tenantSecret)
+	manager := NewFakeManager(c)
+
+	if err := manager.TryCreate(context.Background(), cd, CreateOptions{}); err != nil {
+		t.Fatalf("TryCreate returned error: %v", err)
+	}
+
+	created := &corev1.Secret{}
+	err := c.Get(context.Background(), client.ObjectKey{
+		Name:      GetRemoteSecretName(cd.Name, cd.Namespace),
+		Namespace: istio.IstioSystemNamespace,
+	}, created)
+	if err != nil {
+		t.Fatalf("failed to get created remote secret: %v", err)
+	}
+
+	if got := created.Labels[mcluster.MultiClusterSecretLabel]; got != "true" {
+		t.Fatalf("expected multicluster label to be true, got %q", got)
 	}
 }
 

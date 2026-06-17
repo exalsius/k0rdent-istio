@@ -112,6 +112,9 @@ type KubeOptions struct {
 type RemoteSecretOptions struct {
 	KubeOptions
 
+	// MultiCluster controls the value of the label Istio watches for remote cluster discovery.
+	MultiCluster bool
+
 	// Name of the local cluster whose credentials are stored in the secret. Must be
 	// DNS1123 label as it will be used for the k8s secret name.
 	ClusterName string
@@ -188,13 +191,13 @@ func CreateRemoteSecret(ctx context.Context, opt RemoteSecretOptions, clusterNam
 	var remoteSecret *v1.Secret
 	switch opt.AuthType {
 	case RemoteSecretAuthTypeBearerToken:
-		remoteSecret, err = createRemoteSecretFromTokenAndServer(client, tokenSecret, opt.ClusterName, server, secretName, ctx)
+		remoteSecret, err = createRemoteSecretFromTokenAndServer(client, tokenSecret, opt.ClusterName, server, secretName, opt.MultiCluster, ctx)
 	case RemoteSecretAuthTypePlugin:
 		authProviderConfig := &api.AuthProviderConfig{
 			Name:   opt.AuthPluginName,
 			Config: opt.AuthPluginConfig,
 		}
-		remoteSecret, err = createRemoteSecretFromPlugin(tokenSecret, server, opt.ClusterName, secretName,
+		remoteSecret, err = createRemoteSecretFromPlugin(tokenSecret, server, opt.ClusterName, secretName, opt.MultiCluster,
 			authProviderConfig)
 	default:
 		err = fmt.Errorf("unsupported authentication type: %v", opt.AuthType)
@@ -210,6 +213,7 @@ func CreateRemoteSecret(ctx context.Context, opt RemoteSecretOptions, clusterNam
 func createRemoteSecretFromPlugin(
 	tokenSecret *v1.Secret,
 	server, clusterName, secName string,
+	multiCluster bool,
 	authProviderConfig *api.AuthProviderConfig,
 ) (*v1.Secret, error) {
 	caData, ok := tokenSecret.Data[v1.ServiceAccountRootCAKey]
@@ -224,7 +228,7 @@ func createRemoteSecretFromPlugin(
 	}
 
 	// Encode the Kubeconfig in a secret that can be loaded by Istio to dynamically discover and access the remote cluster.
-	return createRemoteServiceAccountSecret(kubeconfig, clusterName, secName)
+	return createRemoteServiceAccountSecret(kubeconfig, clusterName, secName, multiCluster)
 }
 
 func createBaseKubeconfig(caData []byte, clusterName, server string) *api.Config {
@@ -246,7 +250,7 @@ func createBaseKubeconfig(caData []byte, clusterName, server string) *api.Config
 	}
 }
 
-func createRemoteServiceAccountSecret(kubeconfig *api.Config, clusterName, secName string) (*v1.Secret, error) { // nolint:interfacer
+func createRemoteServiceAccountSecret(kubeconfig *api.Config, clusterName, secName string, multiCluster bool) (*v1.Secret, error) { // nolint:interfacer
 	var data bytes.Buffer
 	if err := latest.Codec.Encode(kubeconfig, &data); err != nil {
 		return nil, err
@@ -264,7 +268,7 @@ func createRemoteServiceAccountSecret(kubeconfig *api.Config, clusterName, secNa
 			Labels: map[string]string{
 				labels.K0rdentIstioVersionLabel:  istio.ReleaseVersion,
 				labels.ManagedByLabel:            labels.ManagedByIstioOperator,
-				mcluster.MultiClusterSecretLabel: "true",
+				mcluster.MultiClusterSecretLabel: fmt.Sprintf("%t", multiCluster),
 			},
 		},
 		Data: map[string][]byte{
@@ -282,7 +286,7 @@ func createPluginKubeconfig(caData []byte, clusterName, server string, authProvi
 	return c
 }
 
-func createRemoteSecretFromTokenAndServer(client *k8s.KubeClient, tokenSecret *v1.Secret, clusterName, server, secName string, ctx context.Context) (*v1.Secret, error) {
+func createRemoteSecretFromTokenAndServer(client *k8s.KubeClient, tokenSecret *v1.Secret, clusterName, server, secName string, multiCluster bool, ctx context.Context) (*v1.Secret, error) {
 	caData, token, err := waitForTokenData(client, tokenSecret, ctx)
 	if err != nil {
 		return nil, err
@@ -295,7 +299,7 @@ func createRemoteSecretFromTokenAndServer(client *k8s.KubeClient, tokenSecret *v
 	}
 
 	// Encode the Kubeconfig in a secret that can be loaded by Istio to dynamically discover and access the remote cluster.
-	return createRemoteServiceAccountSecret(kubeconfig, clusterName, secName)
+	return createRemoteServiceAccountSecret(kubeconfig, clusterName, secName, multiCluster)
 }
 
 func waitForTokenData(client *k8s.KubeClient, secret *v1.Secret, ctx context.Context) (ca, token []byte, err error) {

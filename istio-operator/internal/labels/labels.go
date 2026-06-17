@@ -23,6 +23,8 @@ const (
 	ClusterNameLabel = "cluster-name"
 	// ClusterNamespaceLabel is used to label resources with the namespace of the cluster they belong to.
 	ClusterNamespaceLabel = "cluster-namespace"
+	// KCMRegionClusterLabel marks clusters that belong to a KCM region.
+	KCMRegionClusterLabel = "k0rdent.mirantis.com/kcm-region-cluster"
 )
 
 func HasIstioMeshLabel(labels map[string]string) bool {
@@ -33,6 +35,10 @@ func HasIstioMeshLabel(labels map[string]string) bool {
 func HasIstioRoleLabel(labels map[string]string) bool {
 	_, ok := labels[IstioRoleLabel]
 	return ok
+}
+
+func IsKCMRegionCluster(labels map[string]string) bool {
+	return labels[KCMRegionClusterLabel] == "true"
 }
 
 // IstioVersion returns the value of the `k0rdent.mirantis.com/istio-release-version` label, or an empty string if the label is not present.

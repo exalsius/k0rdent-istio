@@ -10,6 +10,7 @@ import (
 	"github.com/k0rdent/istio/istio-operator/internal/controller/utils"
 	"github.com/k0rdent/istio/istio-operator/internal/hash"
 	"github.com/k0rdent/istio/istio-operator/internal/k8s"
+	"github.com/k0rdent/istio/istio-operator/internal/labels"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -201,6 +202,7 @@ func (rs *RemoteSecretManager) TryCreateForLocalCluster(ctx context.Context, kub
 		ctx,
 		RemoteSecretOptions{
 			AllowOverwrite: true,
+			MultiCluster:   true,
 			Type:           SecretTypeRemote,
 			AuthType:       RemoteSecretAuthTypeBearerToken,
 			ClusterName:    clusterName,
@@ -279,6 +281,7 @@ func (rs *defaultRemoteSecretCreator) GetRemoteSecret(ctx context.Context, kubec
 		ctx,
 		RemoteSecretOptions{
 			AllowOverwrite: opt.AllowOverwrite,
+			MultiCluster:   labels.IsKCMRegionCluster(clusterDeployment.Labels),
 			Type:           SecretTypeRemote,
 			AuthType:       RemoteSecretAuthTypeBearerToken,
 			ClusterName:    clusterDeployment.Name,
