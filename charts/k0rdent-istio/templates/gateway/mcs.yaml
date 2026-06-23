@@ -14,6 +14,7 @@
     "name" (printf "%s-gateway" .Chart.Name)
     "selfManagement" false
     "networkGateway" "{{ .Cluster.metadata.name }}-network"
+    "waypointGateway" "{{ .Cluster.metadata.name }}-waypoint"
 ) }}
 
 {{- range $cfg := $mcsConfigs }}
@@ -43,10 +44,42 @@ spec:
         namespace: {{ $.Release.Namespace }}
         template: {{ $.Chart.Name }}-propagation-{{ $chartVersion }}
         values: |
+          {{`{{- $mesh := (index .Cluster.metadata.labels "k0rdent.mirantis.com/istio-mesh") -}}`}}
           {{`{{- $isregionalCluster := and .Cluster.metadata.labels (eq (index .Cluster.metadata.labels "k0rdent.mirantis.com/kcm-region-cluster") "true") }}`}}
           propagation:
             enabled: true
             data: |
+              {{`{{ if $isregionalCluster }}`}}
+              apiVersion: gateway.networking.k8s.io/v1
+              kind: Gateway
+              metadata:
+                name: istio-ingressgateway
+                namespace: istio-system
+                annotations:
+                  networking.istio.io/service-type: LoadBalancer
+                  cert-manager.io/cluster-issuer: letsencrypt-exalsius-wildcard-dns-records
+              spec:
+                gatewayClassName: istio
+                listeners:
+                - name: http
+                  port: 80
+                  protocol: HTTP
+                  allowedRoutes:
+                    namespaces:
+                      from: All
+                - name: https-wildcard-{{ $mesh }}-ex-ls
+                  protocol: HTTPS
+                  port: 443
+                  hostname: "*.{{ $mesh }}.ex.ls"
+                  allowedRoutes:
+                    namespaces:
+                      from: All
+                  tls:
+                    mode: Terminate
+                    certificateRefs:
+                      - name: wildcard-{{ $mesh }}-ex-ls-tls
+                ---
+              {{`{{ end }}`}}
               apiVersion: gateway.networking.k8s.io/v1
               kind: Gateway
               metadata:
@@ -74,7 +107,7 @@ spec:
               apiVersion: gateway.networking.k8s.io/v1
               kind: Gateway
               metadata:
-                name: istio-waypoint
+                name: {{ $cfg.waypointGateway }}
                 namespace: istio-system
                 annotations:
                   networking.istio.io/service-type: ClusterIP

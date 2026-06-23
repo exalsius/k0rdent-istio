@@ -58,7 +58,7 @@ func TestTryCreate_UpdatesMCSWhenVersionChanges(t *testing.T) {
 	manager := New(c)
 
 	// Simulate a version upgrade.
-	istio.ReleaseVersion = "1.1.0"
+	istio.ReleaseVersion = testUpgradedVersion
 
 	if err := manager.TryCreate(context.Background(), cd); err != nil {
 		t.Fatalf("TryCreate returned error: %v", err)
@@ -71,8 +71,8 @@ func TestTryCreate_UpdatesMCSWhenVersionChanges(t *testing.T) {
 		t.Fatalf("failed to get MCS: %v", err)
 	}
 
-	if got := mcs.Labels[labels.K0rdentIstioVersionLabel]; got != "1.1.0" {
-		t.Errorf("expected updated version label %q, got %q", "1.1.0", got)
+	if got := mcs.Labels[labels.K0rdentIstioVersionLabel]; got != testUpgradedVersion {
+		t.Errorf("expected updated version label %q, got %q", testUpgradedVersion, got)
 	}
 }
 
@@ -111,7 +111,7 @@ func TestTryCreate_SkipsUpdateWhenVersionUnchanged(t *testing.T) {
 }
 
 func TestTryCreate_SequentialVersionUpgrades(t *testing.T) {
-	versions := []string{"1.0.0", "1.1.0", "2.0.0", "2.1.0"}
+	versions := []string{"1.0.0", testUpgradedVersion, "2.0.0", "2.1.0"}
 
 	cd := newClusterDeployment()
 	c := newFakeClient(t)

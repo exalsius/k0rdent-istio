@@ -200,6 +200,7 @@ func main() {
 		IstioCertManager:               cert.New(mgr.GetClient()),
 		RemoteSecretManager:            remotesecret.New(mgr.GetClient()),
 		RemoteSecretPropagationManager: multicluster.New(mgr.GetClient()),
+		RegionalWaypointManager:        multicluster.NewRegionalWaypointManager(mgr.GetClient()),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterDeployment")
 		os.Exit(1)

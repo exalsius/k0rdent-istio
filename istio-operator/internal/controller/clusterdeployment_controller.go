@@ -51,6 +51,7 @@ type ClusterDeploymentReconciler struct {
 	RemoteSecretManager            *remotesecret.RemoteSecretManager
 	IstioCertManager               *cert.CertManager
 	RemoteSecretPropagationManager *multicluster.RemoteSecretPropagationManager
+	RegionalWaypointManager        *multicluster.RegionalWaypointManager
 }
 
 // +kubebuilder:rbac:groups=k0rdent.mirantis.com,resources=clusterdeployments,verbs=get;list;watch;create;update;patch;delete
@@ -140,6 +141,18 @@ func (r *ClusterDeploymentReconciler) tryDeleteResources(ctx context.Context, re
 		return ctrl.Result{}, err
 	}
 
+	if err := r.RegionalWaypointManager.TryDelete(ctx, req); err != nil {
+		utils.LogEvent(
+			ctx,
+			"RegionalWaypointMCSDeletionFailed",
+			"Failed to delete regional waypoint MultiClusterService",
+			clusterDeployment,
+			err,
+			"regionalWaypointMCSName", multicluster.RegionalWaypointMCSName(req.Name, req.Namespace),
+		)
+		return ctrl.Result{}, err
+	}
+
 	return ctrl.Result{}, nil
 }
 
@@ -178,6 +191,21 @@ func (r *ClusterDeploymentReconciler) tryCreateResources(ctx context.Context, re
 			"multiClusterServiceName", multicluster.MultiClusterServiceName(req.Name, req.Namespace),
 		)
 		return ctrl.Result{}, err
+	}
+
+	if regionClusterName := clusterDeployment.Labels[label.KofRegionalClusterNameLabel]; regionClusterName != "" {
+		if err := r.RegionalWaypointManager.TryCreate(ctx, clusterDeployment, regionClusterName); err != nil {
+			utils.LogEvent(
+				ctx,
+				"RegionalWaypointMCSCreationFailed",
+				"Failed to create regional waypoint MultiClusterService",
+				clusterDeployment,
+				err,
+				"regionClusterName", regionClusterName,
+				"regionalWaypointMCSName", multicluster.RegionalWaypointMCSName(req.Name, req.Namespace),
+			)
+			return ctrl.Result{}, err
+		}
 	}
 
 	return ctrl.Result{}, nil
