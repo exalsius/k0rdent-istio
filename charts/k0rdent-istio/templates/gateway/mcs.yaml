@@ -67,17 +67,17 @@ spec:
                   allowedRoutes:
                     namespaces:
                       from: All
-                - name: https-wildcard-{{ $mesh }}-ex-ls
+                - name: https-wildcard-{{`{{ $mesh }}`}}-ex-ls
                   protocol: HTTPS
                   port: 443
-                  hostname: "*.{{ $mesh }}.ex.ls"
+                  hostname: "*.{{`{{ $mesh }}`}}.ex.ls"
                   allowedRoutes:
                     namespaces:
                       from: All
                   tls:
                     mode: Terminate
                     certificateRefs:
-                      - name: wildcard-{{ $mesh }}-ex-ls-tls
+                      - name: wildcard-{{`{{ $mesh }}`}}-ex-ls-tls
                 ---
               {{`{{ end }}`}}
               apiVersion: gateway.networking.k8s.io/v1
