@@ -90,6 +90,7 @@ spec:
                   networking.istio.io/service-type: LoadBalancer
                   {{`{{ else }}`}}
                   networking.istio.io/service-type: NodePort
+                  traffic.istio.io/nodeSelector: kubernetes.io/os=linux
                   {{`{{ end }}`}}
                 labels:
                   topology.istio.io/network: {{ $cfg.networkGateway }}
