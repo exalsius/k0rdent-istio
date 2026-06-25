@@ -45,11 +45,11 @@ spec:
         template: {{ $.Chart.Name }}-propagation-{{ $chartVersion }}
         values: |
           {{`{{- $mesh := (index .Cluster.metadata.labels "k0rdent.mirantis.com/istio-mesh") -}}`}}
-          {{`{{- $isregionalCluster := and .Cluster.metadata.labels (eq (index .Cluster.metadata.labels "k0rdent.mirantis.com/kcm-region-cluster") "true") }}`}}
+          {{`{{- $isRegionalCluster := and .Cluster.metadata.labels (eq (index .Cluster.metadata.labels "k0rdent.mirantis.com/kcm-region-cluster") "true") }}`}}
           propagation:
             enabled: true
             data: |
-              {{`{{ if $isregionalCluster }}`}}
+              {{`{{ if $isRegionalCluster }}`}}
               apiVersion: gateway.networking.k8s.io/v1
               kind: Gateway
               metadata:
@@ -113,7 +113,7 @@ spec:
                 name: istio-eastwestgateway
                 namespace: istio-system
                 annotations:
-                  {{`{{ if $isregionalCluster }}`}}
+                  {{`{{ if $isRegionalCluster }}`}}
                   networking.istio.io/service-type: LoadBalancer
                   {{`{{ else }}`}}
                   networking.istio.io/service-type: NodePort
