@@ -78,35 +78,8 @@ spec:
                     mode: Terminate
                     certificateRefs:
                       - name: wildcard-{{`{{ $mesh }}`}}-ex-ls-tls
-              {{`{{ else }}`}}
-              apiVersion: v1
-              kind: ConfigMap
-              metadata:
-                name: istio-eastwestgateway-options
-                namespace: istio-system
-              data:
-                deployment: |
-                  spec:
-                    template:
-                      spec:
-                        containers:
-                        - name: istio-proxy
-                          ports:
-                            - name: metrics
-                              containerPort: 15020
-                              protocol: TCP
-                            - name: status-port
-                              containerPort: 15021
-                              protocol: TCP
-                            - name: http-envoy-prom
-                              containerPort: 15090
-                              protocol: TCP
-                            - name: mesh
-                              containerPort: 15008
-                              hostPort: 15008
-                              protocol: TCP
-              {{`{{ end }}`}}
               ---
+              {{`{{ end }}`}}
               apiVersion: gateway.networking.k8s.io/v1
               kind: Gateway
               metadata:
@@ -116,8 +89,7 @@ spec:
                   {{`{{ if $isRegionalCluster }}`}}
                   networking.istio.io/service-type: LoadBalancer
                   {{`{{ else }}`}}
-                  networking.istio.io/service-type: NodePort
-                  traffic.istio.io/nodeSelector: kubernetes.io/os=linux
+                  networking.istio.io/service-type: ClusterIP
                   {{`{{ end }}`}}
                 labels:
                   topology.istio.io/network: {{ $cfg.networkGateway }}
@@ -131,13 +103,6 @@ spec:
                     mode: Terminate
                     options:
                       gateway.istio.io/tls-terminate-mode: ISTIO_MUTUAL
-                {{`{{ if not $isRegionalCluster }}`}}
-                infrastructure:
-                  parametersRef:
-                    group: ""
-                    kind: ConfigMap
-                    name: istio-eastwestgateway-options
-                {{`{{ end }}`}}
               ---
               apiVersion: gateway.networking.k8s.io/v1
               kind: Gateway
