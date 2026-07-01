@@ -21,6 +21,18 @@ managementCluster:
   # member clusters can reach the management cluster API server (e.g. "https://1.2.3.4:6443").
   apiServer: "https://kcm-dev-control-plane:6443"
 
+# -- Workspace TCP ingress port pool. Opens a contiguous range of TCP
+# listeners on the regional ingress gateway; per-workspace TCPRoutes bind an
+# individual port to a backend TCP service. Keep portCount <= 64 (the Gateway
+# API per-Gateway listener cap).
+workspace:
+  tcp:
+    # -- First port in the TCP listener pool.
+    portStart: 2200
+    # -- Number of contiguous TCP listeners to open
+    # (ports portStart .. portStart+portCount-1).
+    portCount: 51
+
 cert-manager:
   # -- ServiceTemplate name
   template: cert-manager-v1-19-3

@@ -78,6 +78,15 @@ spec:
                     mode: Terminate
                     certificateRefs:
                       - name: wildcard-{{`{{ $mesh }}`}}-ex-ls-tls
+                {{- range $i := until (int $.Values.workspace.tcp.portCount) }}
+                {{- $tcpPort := add $.Values.workspace.tcp.portStart $i }}
+                - name: tcp-{{ $tcpPort }}
+                  protocol: TCP
+                  port: {{ $tcpPort }}
+                  allowedRoutes:
+                    namespaces:
+                      from: All
+                {{- end }}
               ---
               {{`{{ end }}`}}
               apiVersion: gateway.networking.k8s.io/v1
