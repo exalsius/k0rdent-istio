@@ -96,9 +96,19 @@ spec:
               data:
                 service: |
                   spec:
-                    type: LoadBalancer
-                    externalTrafficPolicy: Cluster
-                    loadBalancerClass: io.cilium/node
+                    ports:
+                    - name: status-port
+                      protocol: TCP
+                      appProtocol: tcp
+                      port: 15021
+                      targetPort: 15021
+                      nodePort: 30021
+                    - name: mesh
+                      protocol: TCP
+                      appProtocol: hbone
+                      port: 15008
+                      targetPort: 15008
+                      nodePort: 30008
               {{`{{ end }}`}}
               ---
               apiVersion: gateway.networking.k8s.io/v1
@@ -109,6 +119,9 @@ spec:
                 annotations:
                   {{`{{ if $isRegionalCluster }}`}}
                   networking.istio.io/service-type: LoadBalancer
+                  {{`{{ else }}`}}
+                  networking.istio.io/service-type: NodePort
+                  traffic.istio.io/nodeSelector: kubernetes.io/os=linux
                   {{`{{ end }}`}}
                 labels:
                   topology.istio.io/network: {{ $cfg.networkGateway }}

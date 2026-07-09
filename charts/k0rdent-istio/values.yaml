@@ -108,6 +108,9 @@ istiod:
   # -- Use Istio ambient profile for control plane defaults
   profile: ambient
 
+  hub: docker.io/mcd01
+  tag: 1.29.4
+
   # -- Mount and reference cert-manager issued TLS and CA certificates
   extraContainerArgs:
     - --tlsCertFile=/etc/cert-manager/tls/tls.crt
