@@ -41,6 +41,8 @@ global:
   # -- Address of the Istio CSR service provided by cert-manager
   caAddress: cert-manager-istio-csr.istio-system.svc:443
 
+  imagePullPolicy: Always
+
   # -- Unique mesh ID shared across clusters in the same mesh
   meshID: main
 
