@@ -64,32 +64,45 @@ func (m *RemoteSecretPropagationManager) TryCreate(ctx context.Context, clusterD
 	return nil
 }
 
-func (m *RemoteSecretPropagationManager) TryDelete(ctx context.Context, req ctrl.Request) error {
+// EnsureDeleted requests deletion of the MultiClusterService and reports whether
+// it is fully gone. Deletion is asynchronous: KCM holds a finalizer on the MCS
+// until Sveltos has withdrawn the propagated services from all member clusters,
+// and that withdrawal re-renders the propagation templates from the source
+// secrets referenced via templateResourceRefs. Callers must therefore keep the
+// remote secret and CA secret alive until this returns true, otherwise the MCS
+// is stuck terminating forever.
+func (m *RemoteSecretPropagationManager) EnsureDeleted(ctx context.Context, req ctrl.Request) (bool, error) {
 	log := log.FromContext(ctx)
 
 	if err := m.tryDeleteDeprecatedPropagationMCS(ctx, req.Name, req.Namespace); err != nil {
 		log.Error(err, "Failed to delete deprecated MultiClusterService for secret propagation")
 	}
 
-	mcs := &kcmv1beta1.MultiClusterService{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: MultiClusterServiceName(req.Name, req.Namespace),
-		},
+	mcs := new(kcmv1beta1.MultiClusterService)
+	if err := m.client.Get(ctx, types.NamespacedName{
+		Name: MultiClusterServiceName(req.Name, req.Namespace),
+	}, mcs); err != nil {
+		if errors.IsNotFound(err) {
+			log.Info("MultiClusterService already deleted")
+			return true, nil
+		}
+		return false, fmt.Errorf("failed to get MultiClusterService: %w", err)
+	}
+
+	if !mcs.DeletionTimestamp.IsZero() {
+		log.Info("MultiClusterService deletion still in progress")
+		return false, nil
 	}
 
 	log.Info("Trying to delete MultiClusterService for secret propagation")
-	if err := m.client.Delete(ctx, mcs); err != nil {
-		if errors.IsNotFound(err) {
-			log.Info("MultiClusterService already deleted")
-			return nil
-		}
-		return fmt.Errorf("failed to delete MultiClusterService: %w", err)
+	if err := m.client.Delete(ctx, mcs); err != nil && !errors.IsNotFound(err) {
+		return false, fmt.Errorf("failed to delete MultiClusterService: %w", err)
 	}
 
 	m.sendDeletionEvent(req)
-	log.Info("MultiClusterService successfully deleted")
+	log.Info("MultiClusterService deletion initiated")
 
-	return nil
+	return false, nil
 }
 
 func (m *RemoteSecretPropagationManager) updateMultiClusterService(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, oldMCS *kcmv1beta1.MultiClusterService) error {

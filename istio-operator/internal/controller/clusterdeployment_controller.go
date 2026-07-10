@@ -105,6 +105,40 @@ func (r *ClusterDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *ClusterDeploymentReconciler) tryDeleteResources(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	clusterDeployment := utils.GetClusterDeploymentStub(req.Name, req.Namespace)
 
+	// The propagation MCS must be fully removed before the remote secret and CA
+	// certificate: Sveltos re-renders the propagation templates from those source
+	// secrets while withdrawing the services from member clusters, and KCM keeps
+	// its finalizer on the MCS until that withdrawal succeeds. Deleting the
+	// secrets first leaves the MCS stuck terminating forever.
+	mcsGone, err := r.RemoteSecretPropagationManager.EnsureDeleted(ctx, req)
+	if err != nil {
+		utils.LogEvent(
+			ctx,
+			"MultiClusterServiceDeletionFailed",
+			"Failed to delete MultiClusterService",
+			clusterDeployment,
+			err,
+			"multiClusterServiceName", multicluster.MultiClusterServiceName(req.Name, req.Namespace),
+		)
+		return ctrl.Result{}, err
+	}
+
+	if err := r.RegionalWaypointManager.TryDelete(ctx, req); err != nil {
+		utils.LogEvent(
+			ctx,
+			"RegionalWaypointMCSDeletionFailed",
+			"Failed to delete regional waypoint MultiClusterService",
+			clusterDeployment,
+			err,
+			"regionalWaypointMCSName", multicluster.RegionalWaypointMCSName(req.Name, req.Namespace),
+		)
+		return ctrl.Result{}, err
+	}
+
+	if !mcsGone {
+		return ctrl.Result{RequeueAfter: MaxRetryDelay}, nil
+	}
+
 	if err := r.RemoteSecretManager.TryDelete(ctx, req); err != nil {
 		utils.LogEvent(
 			ctx,
@@ -125,30 +159,6 @@ func (r *ClusterDeploymentReconciler) tryDeleteResources(ctx context.Context, re
 			clusterDeployment,
 			err,
 			"certName", cert.GetCertName(req.Name, req.Namespace),
-		)
-		return ctrl.Result{}, err
-	}
-
-	if err := r.RemoteSecretPropagationManager.TryDelete(ctx, req); err != nil {
-		utils.LogEvent(
-			ctx,
-			"MultiClusterServiceDeletionFailed",
-			"Failed to delete MultiClusterService",
-			clusterDeployment,
-			err,
-			"multiClusterServiceName", multicluster.MultiClusterServiceName(req.Name, req.Namespace),
-		)
-		return ctrl.Result{}, err
-	}
-
-	if err := r.RegionalWaypointManager.TryDelete(ctx, req); err != nil {
-		utils.LogEvent(
-			ctx,
-			"RegionalWaypointMCSDeletionFailed",
-			"Failed to delete regional waypoint MultiClusterService",
-			clusterDeployment,
-			err,
-			"regionalWaypointMCSName", multicluster.RegionalWaypointMCSName(req.Name, req.Namespace),
 		)
 		return ctrl.Result{}, err
 	}

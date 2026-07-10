@@ -268,19 +268,43 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
+			propagationMCSName := types.NamespacedName{
+				Name: multicluster.MultiClusterServiceName(clusterDeploymentName, DefaultNamespace),
+			}
+			mcs := &kcmv1beta1.MultiClusterService{}
+			err = k8sClient.Get(ctx, propagationMCSName, mcs)
+			Expect(err).NotTo(HaveOccurred())
+
 			Expect(k8sClient.Delete(ctx, cd)).To(Succeed())
 
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
+			// First pass initiates the MCS deletion and requeues; the source
+			// secrets must survive it so Sveltos can still render the
+			// propagation templates while withdrawing the services.
+			result, err := clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: clusterDeploymentNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
+			Expect(result.RequeueAfter).To(BeNumerically(">", 0))
 
 			secret := &corev1.Secret{}
+			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Second pass observes the MCS is gone and removes the secrets.
+			result, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: clusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result.RequeueAfter).To(BeZero())
+
 			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
 			Expect(errors.IsNotFound(err)).To(BeTrue())
 
 			cert := &cmv1.Certificate{}
 			err = k8sClient.Get(ctx, clusterCertificateNamespacedName, cert)
+			Expect(errors.IsNotFound(err)).To(BeTrue())
+
+			err = k8sClient.Get(ctx, propagationMCSName, mcs)
 			Expect(errors.IsNotFound(err)).To(BeTrue())
 		})
 	})
