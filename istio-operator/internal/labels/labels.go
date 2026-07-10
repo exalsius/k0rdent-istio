@@ -25,14 +25,6 @@ const (
 	ClusterNamespaceLabel = "cluster-namespace"
 	// KCMRegionClusterLabel marks clusters that belong to a KCM region.
 	KCMRegionClusterLabel = "k0rdent.mirantis.com/kcm-region-cluster"
-
-	// KofRegionalClusterNameLabel can be set on child ClusterDeployments to identify
-	// the name of the regional cluster that manages them.
-	KofRegionalClusterNameLabel = "k0rdent.mirantis.com/kof-regional-cluster-name"
-
-	// KofClusterNameLabel is set on every ClusterDeployment by KoF to its own cluster name.
-	// Used as a selector to uniquely target a specific cluster in a MultiClusterService.
-	KofClusterNameLabel = "k0rdent.mirantis.com/kof-cluster-name"
 )
 
 func HasIstioMeshLabel(labels map[string]string) bool {

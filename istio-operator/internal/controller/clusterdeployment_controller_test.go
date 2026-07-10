@@ -131,7 +131,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				RemoteSecretManager:            remotesecret.NewFakeManager(k8sClient),
 				IstioCertManager:               cert.New(k8sClient),
 				RemoteSecretPropagationManager: multicluster.New(k8sClient),
-				RegionalWaypointManager:        multicluster.NewRegionalWaypointManager(k8sClient),
 			}
 
 			By(fmt.Sprintf("creating the %s namespace", istio.IstioSystemNamespace))

@@ -17,6 +17,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
+const testUpgradedVersion = "1.1.0"
+
 func TestTryCreate_CreatesMCSWhenNotExists(t *testing.T) {
 	setupTest(t, "1.0.0")
 
